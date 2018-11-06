@@ -17,8 +17,7 @@ SPATIALIZEcafos <- function(df, crs) {
 
 SPATIALIZEcensus <- function(df, crs) {   
   df.post <- df %>% 
-    st_transform(., crs) %>%
-    st_centroid()
+    st_transform(., crs)
 }
 
 
@@ -27,8 +26,12 @@ CREATEbuffers <- function(df, distance) {
   st_buffer(df, units::set_units(distance, miles))
 }   
 
+#setwd
+setwd("~/University of Chicago/Fall 2018/EPIC/CAFOs")
+
 #read in census track shape file
 shape <- st_read("gz_2010_19_140_00_500k.shp")
+shape <- tibble::rowid_to_column(shape, "row.id")
 
 #read in CAFOS csv
 cafos <- read.csv("IA_Merge_CAFOs_Coords.csv", stringsAsFactors = FALSE)
@@ -53,32 +56,12 @@ mat.df3 = st_intersects(buffers_0.1, cafos_spatialized, sparse = TRUE)
 mat.df4 = st_intersects(buffers_0.5, cafos_spatialized, sparse = TRUE)
 mat.df5 = st_intersects(buffers_1, cafos_spatialized, sparse = TRUE)
 
-#get values 
-n.ids <- sapply(mat.df, length)
-vals <- unlist(mat.df)
+#convert to dataframes 
 
-n.ids2 <- sapply(mat.df2, length)
-vals2 <- unlist(mat.df2)
+within_0.01 <- as.data.frame(mat.df)
+within_0.05 <- as.data.frame(mat.df2)
+within_0.1 <- as.data.frame(mat.df3)
+within_0.5 <- as.data.frame(mat.df4)
+within_1 <- as.data.frame(mat.df5)
 
-n.ids3 <- sapply(mat.df3, length)
-vals3 <- unlist(mat.df3)
-
-n.ids4 <- sapply(mat.df4, length)
-vals4 <- unlist(mat.df4)
-
-n.ids5 <- sapply(mat.df5, length)
-vals5 <- unlist(mat.df5)
-
-#match values to original CAFO id and geometry 
-within_0.01 <- as.data.frame(n.ids)
-within_0.05 <- as.data.frame(n.ids2)
-within_0.1 <- as.data.frame(n.ids3)
-within_0.5 <- as.data.frame(n.ids4)
-within_1 <- as.data.frame(n.ids5)
-
-#THIS ONLY GIVES THE NUMBERS OF CAFOS NOT THE CAFOS VALUES THEMSELVES
-shape$within_0.01 <- within_0.01$n.ids
-shape$within_0.05 <- within_0.05$n.ids
-shape$within_0.1 <- within_0.1$n.ids
-shape$within_0.5 <- within_0.5$n.ids
-shape$within_1 <- within_1$n.ids
+#match row.id from within_dfs to row.id from cents
